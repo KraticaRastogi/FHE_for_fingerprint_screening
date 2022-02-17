@@ -4,6 +4,8 @@ from flask import Flask
 
 app = Flask(__name__)
 
+PORT = 8081
+
 @app.route("/")
 def index():
     """
@@ -12,8 +14,8 @@ def index():
     """
     return "Starting server application"
 
-@app.route("/difference")
-def get_difference():
+@app.route("/difference/file1=<file1>&file2=<file2>&threshold=<threshold>")
+def get_difference(file1, file2, threshold):
     """
     This method will restore current context and secret key from the file and calculating the difference between the
     two contexts and then decrypting the computed context
@@ -22,18 +24,18 @@ def get_difference():
     # Creating an empty Pyfhel object
     FHE = Pyfhel()
 
-    # restoring current context from the file
-    FHE.restoreContext("../database/saveContext")
+    # Restoring current context from the file
+    FHE.restoreContext("../client/keys/context")
 
-    # restoring current secret key from the file
-    FHE.restoresecretKey("../database/secretkey")
+    # Restoring current secret key from the file
+    FHE.restoresecretKey("../client/keys/secretkey")
 
     # Initializing an empty PyCtxt ciphertext by providing a pyfhel instance, fileName and an encoding to load the
     # fingerprintData from a saved file
-    context1 = PyCtxt(pyfhel=FHE, fileName="../database/context1.txt", encoding=ENCODING_t.BATCH)
-    context2 = PyCtxt(pyfhel=FHE, fileName="../database/context2.txt", encoding=ENCODING_t.BATCH)
+    context1 = PyCtxt(pyfhel=FHE, fileName="../database/" + file1, encoding=ENCODING_t.BATCH)
+    context2 = PyCtxt(pyfhel=FHE, fileName="../database/" + file2, encoding=ENCODING_t.BATCH)
 
-    # storing the context difference in variable
+    # Storing the context difference in variable
     difference = context1 - context2
 
     # Decrypts a PyCtxt ciphertext using the current secret key, based on the current context.If provided an output
@@ -41,14 +43,16 @@ def get_difference():
     decrypted = FHE.decryptBatch(difference)
 
     # Calculating the mean
-    mean = (sum(decrypted)/len(decrypted))
+    distance = abs(sum(decrypted)/len(decrypted))
+
+    print(distance)
 
     # Comparing the mean value
-    if mean != 0:
-        return "Not matched"
-    else:
+    if distance < float(threshold):
         return "Matched"
+    else:
+        return "Not Matched"
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=8081, debug=True)
+    app.run(host="127.0.0.1", port=PORT, debug=True)
