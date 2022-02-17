@@ -1,5 +1,3 @@
-from fileinput import filename
-
 import cv2
 from Pyfhel import Pyfhel
 from flask import Flask, render_template
@@ -8,11 +6,14 @@ from sklearn.decomposition import PCA
 
 app = Flask(__name__, template_folder='../templates/')
 
+HOST = "127.0.0.1"
 PORT = 8080
 
+# Setting variable for user fingerprint images path
 userDataPath = "../fingerprintData/"
+
+# Setting variable for database path
 databasePath = "../database/"
-keyPath = "../client/keys/"
 
 @app.route('/')
 def index():
@@ -24,7 +25,7 @@ def index():
 
 
 @app.route('/enroll/file=<file>')
-def load(file):
+def enroll(file):
     """
     This method will load preprocessed fingerprintData
     Define fully homomorphic encryption context
@@ -47,12 +48,12 @@ def load(file):
     FHE.keyGen()
 
     # Saving the secret key
-    FHE.savesecretKey(keyPath + "secretkey")
+    FHE.savesecretKey(databasePath + "secretkey")
 
     # Saving the context in database
-    FHE.saveContext(keyPath + "context")
+    FHE.saveContext(databasePath + "context")
 
-    # preprocess fingerprintData for fingerprint image1
+    # Preprocess fingerprintData
     image = preprocessing_data(userDataPath + file)
 
     # Encryption makes use of the public key
@@ -99,9 +100,8 @@ def preprocessing_data(filepath):
     # Fit the model with img_pixels and apply the dimensionality reduction on img_pixels.
     pca_transformed_image = pca.fit_transform(img_pixels)
 
-    # print(pca_transformed_image.flatten())
     return pca_transformed_image.flatten()
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=PORT, debug=True)
+    app.run(host=HOST, port=PORT, debug=True)

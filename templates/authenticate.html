@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<label>Please enter two files to compare:</label><br><br>
+<label for="txtName1">Enter File1:</label><br>
+<input type="text" id="txtName1"/><br><br>
+<label for="txtName2">Enter File2:</label><br>
+<input type="text" id="txtName2"/><br><br>
+<label for="threshold">Enter Threshold:</label><br>
+<input type="text" id="threshold"/><br><br>
+<a href = "javascript:;" onclick = "this.href='/difference/file1=encrypted_' + document.getElementById('txtName1').value + '&file2=encrypted_' + document.getElementById('txtName2').value + '&threshold=' + document.getElementById('threshold').value">authenticate</a>
+</html>
