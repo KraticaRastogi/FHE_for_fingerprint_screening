@@ -1,11 +1,25 @@
+
+
 <!DOCTYPE html>
 <html>
-<label>Please enter two files to compare:</label><br><br>
-<label for="txtName1">Enter File1:</label><br>
-<input type="text" id="txtName1"/><br><br>
-<label for="txtName2">Enter File2:</label><br>
-<input type="text" id="txtName2"/><br><br>
-<label for="threshold">Enter Threshold:</label><br>
-<input type="text" id="threshold"/><br><br>
-<a href = "javascript:;" onclick = "this.href='/difference/file1=encrypted_' + document.getElementById('txtName1').value + '&file2=encrypted_' + document.getElementById('txtName2').value + '&threshold=' + document.getElementById('threshold').value">authenticate</a>
+<center>
+<body>
+        <h1 style="color:blue;font-size:30px;">Please enter two fingerprint files to validate</h1>
+            <p>
+                <label style="color:black;font-size:15px;" for="txtName1">Enter File1:</label>
+                <input type="txtName1" id="txtName1" name="txtName1" align="left">
+            </p>
+            <p>
+                <label style="color:black;font-size:15px;" for="txtName2">Enter File2:</label>
+                <input type="txtName2" id="txtName2" name="txtName2" align="left">
+            </p>
+            <p>
+                <label style="color:black;font-size:15px;" for="threshold">Enter Threshold:</label>
+                <input type="threshold" id="threshold" name="threshold" align="left">
+            </p>
+            <p>
+                <a style="color:black;font-size:20px;" href = "javascript:;" onclick = "this.href='/difference/file1=' + document.getElementById('txtName1').value + '&file2=' + document.getElementById('txtName2').value + '&threshold=' + document.getElementById('threshold').value"><button>authenticate</button></a>
+            </p>
+</body>
+</center>
 </html>

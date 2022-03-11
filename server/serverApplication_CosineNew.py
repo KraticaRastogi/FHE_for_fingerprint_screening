@@ -1,13 +1,12 @@
 # Defining the imports required
-import math
 import os
-from datetime import datetime
+import numpy as np
+import pandas as pd
 from Pyfhel import Pyfhel, PyCtxt
 from Pyfhel.util import ENCODING_t
 from flask import Flask, render_template
-import pandas as pd
+from math import sqrt
 
-# Create an instance of flask web application
 app = Flask(__name__, template_folder='../templates/')
 
 # Defined host and port value for server application
@@ -15,7 +14,7 @@ HOST = "127.0.0.1"
 PORT = 8081
 
 # Setting variable for database path
-dirPath = "../database/"
+database = "../database/"
 
 # Creating an empty Pyfhel object
 FHE = Pyfhel()
@@ -39,40 +38,49 @@ def get_difference(file1, file2, threshold, return_distance=False):
     two contexts and then decrypting the computed context
     :return: Matched or Not Matched
     """
-    t1 = datetime.now()
 
     # Initializing an empty PyCtxt ciphertext by providing a pyfhel instance, fileName and an encoding to load the
     # fingerprintData from a saved file
-    context1 = PyCtxt(pyfhel=FHE, scheme=CKKS, fileName=dirPath + file1, encoding=ENCODING_t.BATCH)
-    context2 = PyCtxt(pyfhel=FHE, fileName=dirPath + file2, encoding=ENCODING_t.BATCH)
+    context1 = PyCtxt(pyfhel=FHE, fileName=database + file1, encoding=ENCODING_t.BATCH)
+    context2 = PyCtxt(pyfhel=FHE, fileName=database + file2, encoding=ENCODING_t.BATCH)
 
-    # Storing the context difference in variable
-    difference = context1 - context2
+    decrypted_context1 = np.array(FHE.decryptBatch(context1))
+    decrypted_context2 = np.array(FHE.decryptBatch(context2))
 
-    # Decrypts a PyCtxt ciphertext using the current secret key, based on the current context.If provided an output
-    # vector, decrypts the ciphertext inside it.
-    decrypted = FHE.decryptBatch(difference)
+    distance = abs(cosine_similarity(decrypted_context1, decrypted_context2))
 
-    # Calculating the mean
-    distance = abs(sum(decrypted) / len(decrypted))
-
-    t2 = datetime.now()
-
-    decryptionTime = t2 - t1
-
-    print("Decryption Time Taken:", decryptionTime.microseconds)
-
-    print("Distance Taken:", distance)
+    print(distance)
 
     # Checking the boolean value of return_distance
     if return_distance:
-        return distance * 1000
+        return distance
     else:
         # Comparing the mean value
-        if distance < float(threshold):
+        if distance > float(threshold):
             return "Matched"
         else:
             return "Not Matched"
+
+
+def square_rooted(x):
+    """
+    Calculating the square root to pass in the calculation of cosine similarity
+    :param x: Value to be passed to calculate the square root
+    :return: round off of square root unto 3 decimals.
+    """
+    return round(sqrt(sum([a * a for a in x])), 3)
+
+
+def cosine_similarity(x, y):
+    """
+    This method will return the cosine similarity between two given fingerprint feature vectors
+    :param x: fingerprint vector-1 to calculate the similarity
+    :param y: fingerprint vector-2 to calculate the similarity
+    :return: computed similarity between two fingerprint vectors
+    """
+    numerator = sum(a * b for a, b in zip(x, y))
+    denominator = square_rooted(x) * square_rooted(y)
+    return round(numerator / float(denominator), 3)
 
 
 # The application will decorate to a view function to register route with the given URL
@@ -86,7 +94,7 @@ def display_table():
     encrypted_filenames = []
 
     # Iterate through all file
-    for file in os.listdir(dirPath):
+    for file in os.listdir(database):
         # Check whether file is in text format or not
         if "." in file:
             encrypted_filenames.append(file)
@@ -95,7 +103,7 @@ def display_table():
     df_list = []
 
     # Set threshold value
-    threshold = 1.0
+    threshold = 0.01
 
     # Initializing true positive, false positive, false negative and true negative
     tp_count = 0
@@ -120,7 +128,7 @@ def display_table():
             expected = filename1 == filename2
 
             # If difference between two encrypted files is less than threshold then actual is true otherwise false
-            actual = diff < threshold
+            actual = diff > threshold
 
             # Calling getResult function to compare between the actual and expected (predicted) value
             result = getResult(actual, expected)
@@ -160,6 +168,8 @@ def display_table():
 
     # Return tabular view
     return render_template('table.html', table_html=df_html)
+    # return "tabular view"
+
 
 def getResult(actual, expected):
     """
@@ -177,6 +187,7 @@ def getResult(actual, expected):
     else:
         return "TN"
 
+
 def printMetrics(tp, fp, fn, tn):
     """
     This function is used to print the metrics such as TP, FP, FN, TN
@@ -184,7 +195,7 @@ def printMetrics(tp, fp, fn, tn):
     :param fp:
     :param fn:
     :param tn:
-    :return:
+    :return: printing the performance scores and metrices
     """
     print("True Positive : ", tp)
     print("False Positive : ", fp)
@@ -205,19 +216,12 @@ def printMetrics(tp, fp, fn, tn):
     print("F1_score : ", f1_score)
 
 
-def euclideanDistance(instance1, instance2, length):
-    distance = 0
-    for x in range(length):
-        distance += pow((instance1[x] - instance2[x]), 2)
-    return math.sqrt(distance)
-
-
 if __name__ == "__main__":
     # Restoring current context from the file
-    FHE.restoreContext(dirPath + "context")
+    FHE.restoreContext(database + "context")
 
     # Restoring current secret key from the file
-    FHE.restoresecretKey(dirPath + "secretkey")
+    FHE.restoresecretKey(database + "secretkey")
 
     # Running the application in local development server
     app.run(host=HOST, port=PORT, debug=True)

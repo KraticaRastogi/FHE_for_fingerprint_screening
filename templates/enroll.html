@@ -1,7 +1,14 @@
 <!DOCTYPE html>
 <html>
-<label>Please enter fingerprint file name:</label><br><br>
-<input type="text" id="txtName"/><br><br>
-<!--<a href = "javascript:;">enroll</a>-->
-<a href = "javascript:;" onclick = "this.href='/enroll/file=' + document.getElementById('txtName').value">enroll</a>
+<center>
+    <body>
+         <h1 style="color:blue;font-size:30px;">Please enter fingerprint file name:</h1>
+         <p style="color:black;font-size:20px;">
+             <input type="text" id="txtName"><br><br>
+             <a style="color:black;font-size:20px;" href = "javascript:;" onclick = "this.href='/enroll/file=' + document.getElementById('txtName').value">
+                 <input type="button" name="go" value="Enroll" />
+             </a>
+         </p>
+      </body>
+</center>
 </html>
